@@ -13,8 +13,6 @@ import random
 dc_ae = DCAE_HF.from_pretrained(f"mit-han-lab/dc-ae-f64c128-in-1.0").to(torch.bfloat16)
 
 # encode
-dataset = ImageNetDataset(1000)
-dataloader = DataLoader(dataset, 64, num_workers = 15, prefetch_factor= 5)
 
 device = torch.device("cuda")
 dc_ae = dc_ae.to(device).eval()
@@ -37,7 +35,7 @@ def save_tensor(tensor, base_path): # shape of (1, batch, h, w)
     directory = random_string[:3]
     dir_path = f"{base_path}/{directory}"
     os.makedirs(dir_path, exist_ok=False)
-    full_path = f"{dir_path}/{identifier}"
+    full_path = f"{dir_path}/{identifier}.pth"
     torch.save(tensor, full_path)
     return full_path
     
@@ -45,15 +43,21 @@ def save_tensor(tensor, base_path): # shape of (1, batch, h, w)
 splits = ["train", "validation", "test"]
 import os
 for split in splits:
+    dataset = ImageNetDataset(1000, dtype = torch.bfloat16, split = split)
+    dataloader = DataLoader(dataset, 64, num_workers = 15, prefetch_factor= 5)
     with torch.no_grad():
-        os.makedirs(split, exist_ok=False)
+        os.makedirs(split, exist_ok=True)
         base_path = f"{split}/"
         for i, batch in enumerate(dataloader):
             batch = batch.to("cuda")
-            latent = dc_ae.encode(x)
+
+            latent = dc_ae.encode(batch)
             
             if i % 100 == 0:
-                y = dc_ae.decode(latent)
+                y = dc_ae.decode(latent[0:1, :, :, :])
                 print(time.perf_counter() - start)
-                save_image(y * 0.5 + 0.5, "demo_dc_ae.png")
+                save_image(y * 0.5 + 0.5, f"images/image{i}.png")
+            latent = latent.to("cpu")
+            for j in range(latent.shape[0]):
+                save_tensor(latent[j, :, :], base_path)
             exit()

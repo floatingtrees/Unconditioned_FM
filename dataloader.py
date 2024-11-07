@@ -23,7 +23,9 @@ class ImageNetDataset(Dataset):
         else:
             self.transform = v2.Compose([
             v2.Resize((256, 256)),  # Resize the image to 224x224 (standard for ImageNet)
-            v2.ToImage(), v2.ToDtype(dtype, scale=True)  # Convert the image to a PyTorch tensor
+            v2.ToTensor(),
+            v2.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)), 
+            v2.ToDtype(dtype, scale=True)  # Convert the image to a PyTorch tensor
             ])
 
     def __len__(self):
