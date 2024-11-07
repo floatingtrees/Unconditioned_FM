@@ -1,4 +1,6 @@
 venv/
 *.pt
+*.pth
 __pycache__/
 images/
+train/

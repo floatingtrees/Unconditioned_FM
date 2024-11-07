@@ -17,7 +17,6 @@ class ImageNetDataset(Dataset):
         self.num_classes = num_classes
         super().__init__()
         self.hfds = load_dataset("ILSVRC/imagenet-1k", trust_remote_code=True)
-        print(self.hfds.keys())
         if transform is not None:
             self.transform = transform
         else:
